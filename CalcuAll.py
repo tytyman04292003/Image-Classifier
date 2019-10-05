@@ -43,12 +43,12 @@ def create_model(arch, hidden_units):
         param.requires_grad = False
 
     # Create our classifier to replace the current one in the model
-    classifier = nn.Sequential(nn.Linear(9216, 256),
+    classifier = nn.Sequential(nn.Linear(input_features, hidden_units),
                               nn.ReLU(),
                               nn.Dropout(p=0.5),
-                              nn.Linear(256, 102),
+                              nn.Linear(hidden_units, 102),
                               nn.LogSoftmax(dim=1))
-    model.classifier = classifier
+    #model.classifier = classifier
     
     print("Done creating the model\n")
     return model
@@ -61,8 +61,8 @@ def train_model(model, train_loader, valid_loader, criterion, optimizer, epochs)
         
         Inputs:
         model - The model to train
-        train_dataloaders - The data for the training
-        valid_dataloaders - The data for the validation
+        train_loaders - The data for the training
+        valid_loaders - The data for the validation
         criterion - The loss function 
         optimizer - The optimizer
         epochs - The number of epochs to run the training for
@@ -91,7 +91,7 @@ def train_model(model, train_loader, valid_loader, criterion, optimizer, epochs)
         for inputs, labels in train_loader:
             steps += 1
             #transfer model to gpu
-            inputs,labels = inputs.to('cpu'), labels.to('cpu')
+            inputs, labels = inputs.to('cpu'), labels.to('cpu')
 
             optimizer.zero_grad()
 
@@ -112,7 +112,7 @@ def train_model(model, train_loader, valid_loader, criterion, optimizer, epochs)
                 # Turn off gradients for validation
                 with torch.no_grad():
                     for images, labels in valid_loader:
-                        inputs,labels = inputs.to('cpu'), labels.to('cpu')
+                        images, labels = images.to('cpu'), labels.to('cpu')
                         output = model.forward(images)
 
                         batch_loss = criterion(output, labels)
@@ -138,7 +138,7 @@ def train_model(model, train_loader, valid_loader, criterion, optimizer, epochs)
 
 
 
-def save_model(model, train_datasets, learning_rate, batch_size, epochs, criterion, optimizer, hidden_units, arch):
+def save_model(model, train_data, learning_rate, batch_size, epochs, criterion, optimizer, hidden_units, arch):
     '''
         Saves a model to a checkpoint file with the learning rate, batch size, epochs, loss function, optimizer, hidden units, and architecture used in training
         
