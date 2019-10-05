@@ -28,7 +28,7 @@ category_name = args.category_names
 use_gpu = args.gpu
 
 # Load the model
-model = CalcuAll.load_model(checkpoint_file)
+model = CalcuAll.load_model(checkpoint)
 
 # Load the content of the json file
 categories = helpers.JsonLoader.load_json(category_name)
