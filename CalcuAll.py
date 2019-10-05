@@ -2,6 +2,7 @@ from torch import nn, optim
 from torch.utils.data import DataLoader
 from torchvision import *
 from PIL import Image
+import helpers.ProcessImage
 import torch
 import torch.nn.functional as F
 import torchvision 
@@ -168,7 +169,7 @@ def save_model(model, train_datasets, learning_rate, batch_size, epochs, criteri
             'optimizer': optimizer.state_dict(), 
             'class_to_idx': train_data.class_to_idx}
 
-    torch.save(checkpoint, checkpoint_file)
+    torch.save(checkpoint, checkpoint_file = 'mycheckpoint.pth')
     print("Done saving the model")
 
 
