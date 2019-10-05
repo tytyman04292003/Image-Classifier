@@ -169,7 +169,7 @@ def save_model(model, train_data, learning_rate, batch_size, epochs, criterion, 
             'optimizer': optimizer.state_dict(), 
             'class_to_idx': train_data.class_to_idx}
 
-    torch.save(checkpoint, checkpoint_file = 'mycheckpoint.pth')
+    torch.save(checkpoint, checkpoint_file)
     print("Done saving the model")
 
 
@@ -232,7 +232,9 @@ def predict(categories, image_path, model, topk=5):
     top_cl = classes.tolist()[0]
 
     #Reverse the dict
-    idx_to_class = {val: key for key, val in model.class_to_idx.items()}
+    idx_to_class = {model.class_to_idx[i]: i for i in model.class_to_idx}
+    # OR {val: key for key, val in model.class_to_idx.items()}
+    # OR {v:k for k, v in model.class_to_idx.items()}
 
     #Get the correct indices
     labels = []
@@ -261,17 +263,15 @@ def sanity_check(cat_to_name, file_path, model, index):
     ax = fig.add_axes([.2, .4, .445, .445])
 
     #Display + process image
-    result = process_image('flowers/test/54/image_05440.jpg')
+    result = process_image('flowers/test/54/image_05402.jpg')
     ax = imshow(result, ax);
-    #result = helpers.ProcessImage.process_image(file_path)
-    #ax = helpers.ProcessImag imshow(result, ax);
 
     #Title for graph
     index = 54
     ax.set_title(cat_to_name[str(index)])
 
     #Predict image
-    probs, classes = predict('flowers/test/54/image_05440.jpg', model)
+    probs, classes = predict('flowers/test/54/image_05402.jpg', model)
 
     #Displays bar graph with axes
     ax1 = fig.add_axes([0, -.355, .775, .775])
