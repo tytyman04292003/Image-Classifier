@@ -10,7 +10,7 @@ import argparse
 # Create the parser and add the arguments
 parser = argparse.ArgumentParser(description="Train a Neural Network using transfer learning")
 # 1. Get the directory to the image files to train with
-parser.add_argument('data_directory', default='./flowers',
+parser.add_argument('--data_directory', default='./flowers',
                     help="The relative path to the image files to train on. It should include two folders: 'train' and 'test' for training.")
 # 2. Get the directory to the image files to train with
 parser.add_argument('--save_dir', default='./',
@@ -33,7 +33,7 @@ parser.add_argument('--gpu', default=False, action='store_true',
 
 # Collect the arguments
 args = parser.parse_args()
-data_dir = args.data_directory
+data_dir = args.data_directory 
 save_directory = args.save_dir
 arch = args.arch
 learning_rate = args.learning_rate
@@ -58,4 +58,4 @@ if model != 0:
     CalcuAll.train_model(model, train_loader, valid_loader, criterion, optimizer, epochs)
 
     # Save the model
-    CalcuAll.save_model(model, train_data, learning_rate, batch_size, hidden_units, arch) 
+    CalcuAll.save_model(model, train_data, learning_rate, batch_size, epochs, criterion, optimizer, hidden_units, arch) 
