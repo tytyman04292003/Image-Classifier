@@ -8,7 +8,7 @@ import argparse
 # Load a saved model and predict a flower image:
 # Create the parser and add the arguments
 parser = argparse.ArgumentParser(description="Load a Neural Network to use for inference")
-parser.add_argument('--data_directory', 
+parser.add_argument('--input', 
                     help="The relative path to the image files to infer on.")
 parser.add_argument('--checkpoint',
                     help="The relative path to the neural network checkpoint as a pth file.")
@@ -21,7 +21,7 @@ parser.add_argument('--gpu', default=False, action='store_true',
 
 # Collect the arguments
 args = parser.parse_args()
-data_directory = args.data_directory
+inputs = args.input
 checkpoint = args.checkpoint
 top_k = args.top_k
 category_name = args.category_names
