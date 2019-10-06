@@ -31,7 +31,7 @@ use_gpu = args.gpu
 model = CalcuAll.load_model(checkpoint)
 
 # Load the content of the json file
-categories = helpers.JsonLoader.load_json(category_name)
+categories = helpers.LoadJson.load_json(category_name)
 
 # Predict
-CalcuAll.predict(categories, image_path, model, topk=5)
+CalcuAll.predict(categories, inputs, model, top_k)
