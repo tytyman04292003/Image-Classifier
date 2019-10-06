@@ -17,7 +17,7 @@ parser.add_argument('--save_dir', default='./',
                     help="The relative path to save the neural network checkpoint")             
 # 3. Choose the architecture
 parser.add_argument('--arch', default="alexnet",
-                    help="The architecture you wish to train the model with is alexnet")
+                    help="The architecture you wish to train the model with is alexnet or resnet18")
 # 4. Set the hyperparameters: Learning Rate, Hidden Units, Training Epochs, Training batch size
 parser.add_argument('--learning_rate', type=float, default="0.001",
                     help="The learning rate for the model")
@@ -58,4 +58,4 @@ if model != 0:
     CalcuAll.train_model(model, train_loader, valid_loader, criterion, optimizer, epochs)
 
     # Save the model
-    CalcuAll.save_model(model, train_data, learning_rate, batch_size, epochs, criterion, optimizer, hidden_units, arch) 
+    CalcuAll.save_model(model, checkpoint_file, train_data, learning_rate, batch_size, epochs, criterion, optimizer, hidden_units, arch) 
