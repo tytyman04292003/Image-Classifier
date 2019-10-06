@@ -42,18 +42,20 @@ def create_model(arch, hidden_units):
     for param in model.parameters():
         param.requires_grad = False
 
-    # Create our classifier to replace the current one in the model
+    # Create our classifier to replace the current one in the model    
     classifier = nn.Sequential(nn.Linear(input_features, hidden_units),
                               nn.ReLU(),
                               nn.Dropout(p=0.5),
                               nn.Linear(hidden_units, 102),
                               nn.LogSoftmax(dim=1))
-    #model.classifier = classifier
+    
+    if arch.lower() == 'alexnet':
+        model.classifier = classifier
+    elif arch.lower() == 'resnet18':
+        model.fc = classifier
     
     print("Done creating the model\n")
     return model
-
-
 
 def train_model(model, train_loader, valid_loader, criterion, optimizer, epochs):
     '''
@@ -73,11 +75,14 @@ def train_model(model, train_loader, valid_loader, criterion, optimizer, epochs)
     # Track the loss and accuracy on the validation set to determine the best hyperparameters
     print("Training the model...\n")
 
+    # Use GPU if possible
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    
     # Set the model for training
-    model.to("cpu")
+    model.to(device)
 
     # Define starters
-    epochs = 2 
+    #epochs = 2 
     print_every = 10
     steps = 0
     running_loss = 0 
@@ -91,7 +96,7 @@ def train_model(model, train_loader, valid_loader, criterion, optimizer, epochs)
         for inputs, labels in train_loader:
             steps += 1
             #transfer model to gpu
-            inputs, labels = inputs.to('cpu'), labels.to('cpu')
+            inputs, labels = inputs.to(device), labels.to(device)
 
             optimizer.zero_grad()
 
@@ -112,7 +117,7 @@ def train_model(model, train_loader, valid_loader, criterion, optimizer, epochs)
                 # Turn off gradients for validation
                 with torch.no_grad():
                     for images, labels in valid_loader:
-                        images, labels = images.to('cpu'), labels.to('cpu')
+                        images, labels = images.to(device), labels.to(device)
                         output = model.forward(images)
 
                         batch_loss = criterion(output, labels)
@@ -138,13 +143,13 @@ def train_model(model, train_loader, valid_loader, criterion, optimizer, epochs)
 
 
 
-def save_model(model, train_data, learning_rate, batch_size, epochs, criterion, optimizer, hidden_units, arch):
+def save_model(model, checkpoint_file, train_data, learning_rate, batch_size, epochs, criterion, optimizer, hidden_units, arch):
     '''
         Saves a model to a checkpoint file with the learning rate, batch size, epochs, loss function, optimizer, hidden units, and architecture used in training
         
         Inputs:
         model - The model to train
-        train_datasets - The dataset for the training. This is used to get the classes to indexes
+        train_data - The dataset for the training. This is used to get the classes to indexes
         learning_rate - The learning rate used for training
         hidden_units - The hidden layers unit size
         arch - The architecture used
@@ -157,19 +162,24 @@ def save_model(model, train_data, learning_rate, batch_size, epochs, criterion, 
 
     # Save the train image dataset
     model.class_to_idx = train_data.class_to_idx  
-    checkpoint = {'input_size': 9216,
-            'hidden_layer': 256,
+    
+    if arch.lower() == "alexnet":
+        input_features = 9216
+    elif arch.lower() == "resnet18":
+        input_features = 512
+        
+    checkpoint = {'input_size': input_features,
             'output_size': 102,
             'hidden_units': hidden_units,
             'epochs': epochs,
-            'arch': 'alexnet',
+            'arch': arch,
             'learning_rate': learning_rate,
-            'classifier': classifier,
+            'classifier': model.classifier,
             'state_dict': model.state_dict(),
             'optimizer': optimizer.state_dict(), 
             'class_to_idx': train_data.class_to_idx}
 
-    torch.save(checkpoint, checkpoint_file)
+    torch.save(checkpoint, checkpoint_file = 'mycheckpoint.pth')
     print("Done saving the model")
 
 
@@ -186,6 +196,9 @@ def load_model(checkpoint_file):
     print("Loading the model...")
     #Load the model from dictionary made
     checkpoint = torch.load(checkpoint_file)
+    
+    if(checkpoint['arch'].lower() == 'alexnet' or checkpoint['arch'].lower() == 'resnet18'):
+        model = getattr(torchvision.models, checkpoint['arch'])(pretrained = True)
     
     model.classifier = checkpoint['classifier']
     model.load_state_dict(checkpoint['state_dict'])
@@ -218,7 +231,7 @@ def predict(categories, image_path, model, topk=5):
     model.eval()
     
     #Use GPU if intended
-    model.to('cpu')
+    model.to(device)
     
     image = torch.from_numpy(np.array([image])).float()
     
@@ -232,14 +245,14 @@ def predict(categories, image_path, model, topk=5):
     top_cl = classes.tolist()[0]
 
     #Reverse the dict
-    idx_to_class = {model.class_to_idx[i]: i for i in model.class_to_idx}
+    idx_to_class = {model.class_to_index[i]: i for i in model.class_to_index}
     # OR {val: key for key, val in model.class_to_idx.items()}
     # OR {v:k for k, v in model.class_to_idx.items()}
 
     #Get the correct indices
     labels = []
     for c in top_cl:
-        labels.append(cat_to_name[idx_to_class[c]])
+        labels.append(categories[idx_to_class[c]])
 
     return top_p, labels
 
