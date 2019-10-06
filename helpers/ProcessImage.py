@@ -1,3 +1,9 @@
+from PIL import Image
+from torchvision import transforms
+import numpy as np
+import matplotlib.pyplot as plt
+import torchvision
+
 def process_image(image_path):
     ''' Scales, crops, and normalizes a PIL image for a PyTorch model,
         returns an Numpy array
