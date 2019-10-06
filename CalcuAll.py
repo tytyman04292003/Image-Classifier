@@ -143,7 +143,7 @@ def train_model(model, train_loader, valid_loader, criterion, optimizer, epochs)
 
 
 
-def save_model(model, checkpoint_file, train_data, learning_rate, batch_size, epochs, criterion, optimizer, hidden_units, arch):
+def save_model(model, train_data, learning_rate, batch_size, epochs, criterion, optimizer, hidden_units, arch):
     '''
         Saves a model to a checkpoint file with the learning rate, batch size, epochs, loss function, optimizer, hidden units, and architecture used in training
         
@@ -179,7 +179,7 @@ def save_model(model, checkpoint_file, train_data, learning_rate, batch_size, ep
             'optimizer': optimizer.state_dict(), 
             'class_to_idx': train_data.class_to_idx}
 
-    torch.save(checkpoint, checkpoint_file = 'mycheckpoint.pth')
+    torch.save(checkpoint, 'mycheckpoint.pth')
     print("Done saving the model")
 
 
