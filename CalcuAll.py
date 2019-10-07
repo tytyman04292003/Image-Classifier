@@ -2,7 +2,6 @@ from torch import nn, optim
 from torch.utils.data import DataLoader
 from torchvision import *
 from PIL import Image
-import helpers.ProcessImage
 import torch
 import torch.nn.functional as F
 import torchvision 
@@ -76,13 +75,13 @@ def train_model(model, train_loader, valid_loader, criterion, optimizer, epochs)
     print("Training the model...\n")
 
     # Use GPU if possible
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    device = torch.device('cuda' if torch.cuda.is_available() and gpu else 'cpu')
     
     # Set the model for training
     model.to(device)
 
     # Define starters
-    #epochs = 2 
+    epochs = 2 
     print_every = 10
     steps = 0
     running_loss = 0 
@@ -167,14 +166,24 @@ def save_model(model, train_data, learning_rate, batch_size, epochs, criterion, 
         input_features = 9216
     elif arch.lower() == "resnet18":
         input_features = 512
-        
+    
+    classifier = nn.Sequential(nn.Linear(input_features, hidden_units),
+                              nn.ReLU(),
+                              nn.Dropout(p=0.5),
+                              nn.Linear(hidden_units, 102))
+    
+    if arch.lower() == 'alexnet':
+        model.classifier = classifier
+    elif arch.lower() == 'resnet18':
+        model.fc = classifier
+    
     checkpoint = {'input_size': input_features,
             'output_size': 102,
             'hidden_units': hidden_units,
             'epochs': epochs,
             'arch': arch,
             'learning_rate': learning_rate,
-            'classifier': model.classifier,
+            'classifier': classifier,
             'state_dict': model.state_dict(),
             'optimizer': optimizer.state_dict(), 
             'class_to_idx': train_data.class_to_idx}
@@ -200,7 +209,11 @@ def load_model(checkpoint_file):
     if(checkpoint['arch'].lower() == 'alexnet' or checkpoint['arch'].lower() == 'resnet18'):
         model = getattr(torchvision.models, checkpoint['arch'])(pretrained = True)
     
-    model.classifier = checkpoint['classifier']
+    if checkpoint['arch'].lower() == 'alexnet':
+        model.classifier = checkpoint['classifier']
+    elif checkpoint['arch'].lower() == 'resnet18':
+        model.fc = checkpoint['classifier']
+        
     model.load_state_dict(checkpoint['state_dict'])
     model.class_to_index = checkpoint['class_to_idx']
     #model.classifier.epochs = checkpoint['epochs']
@@ -212,7 +225,7 @@ def load_model(checkpoint_file):
     print("Done loading the model")
     return model    
 
-def predict(categories, image_path, model, topk=5):
+def predict(categories, image_path, model, topk):
     '''
         Predict the class (or classes) of an image using a trained deep learning model.
         
@@ -225,12 +238,16 @@ def predict(categories, image_path, model, topk=5):
         top_p - The probabilities for the predictions
         labels - The class labels for the predictions
     '''
+    import helpers.ProcessImage
+    
+    #Load Image
     image = process_image(image_path)
     
     #Switch to evaluation mode
     model.eval()
     
     #Use GPU if intended
+    device = torch.device('cuda' if torch.cuda.is_available() and gpu else 'cpu')
     model.to(device)
     
     image = torch.from_numpy(np.array([image])).float()
@@ -253,7 +270,10 @@ def predict(categories, image_path, model, topk=5):
     labels = []
     for c in top_cl:
         labels.append(categories[idx_to_class[c]])
+        
+    output = list(zip(top_p, labels))
 
+    print("Top Probabilities and their Classes: {}".format(output))
     return top_p, labels
 
 def sanity_check(cat_to_name, file_path, model, index):
