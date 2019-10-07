@@ -52,10 +52,14 @@ model = CalcuAll.create_model(arch, hidden_units)
 if model != 0:
     # Define the loss function and optimizer
     criterion = nn.NLLLoss()
-    optimizer = optim.Adam(model.classifier.parameters(), learning_rate) 
+    
+    if arch == 'alexnet':
+        optimizer = optim.Adam(model.classifier.parameters(), learning_rate)
+    elif arch == 'resnet18':
+        optimizer = optim.Adam(model.fc.parameters(), learning_rate)
 
     # Train the model with validation
     CalcuAll.train_model(model, train_loader, valid_loader, criterion, optimizer, epochs)
 
     # Save the model
-    CalcuAll.save_model(model, checkpoint_file, train_data, learning_rate, batch_size, epochs, criterion, optimizer, hidden_units, arch) 
+    CalcuAll.save_model(model, train_data, learning_rate, batch_size, epochs, criterion, optimizer, hidden_units, arch) 
