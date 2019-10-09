@@ -56,7 +56,7 @@ def create_model(arch, hidden_units):
     print("Done creating the model\n")
     return model
 
-def train_model(model, train_loader, valid_loader, criterion, optimizer, epochs):
+def train_model(model, train_loader, valid_loader, criterion, optimizer, epochs, gpu):
     '''
         Trains a model using a given loss function, optimizer, dataloaders, epochs, and whether or not to use the GPU. Outputs loss and accuracy numbers
         
