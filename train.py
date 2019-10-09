@@ -59,7 +59,7 @@ if model != 0:
         optimizer = optim.Adam(model.fc.parameters(), learning_rate)
 
     # Train the model with validation
-    CalcuAll.train_model(model, train_loader, valid_loader, criterion, optimizer, epochs)
+    CalcuAll.train_model(model, train_loader, valid_loader, criterion, optimizer, epochs, gpu)
 
     # Save the model
     CalcuAll.save_model(model, train_data, learning_rate, batch_size, epochs, criterion, optimizer, hidden_units, arch) 
