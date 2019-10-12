@@ -81,13 +81,9 @@ def train_model(model, train_loader, valid_loader, criterion, optimizer, epochs,
     model.to(device)
 
     # Define starters
-    epochs = 2 
     print_every = 10
     steps = 0
     running_loss = 0 
-    
-    #Keep track of the losses and accuracies for training and validation
-    #train_losses, validation_losses, training_accuracies, validation_accuracies = [], [], [], []
 
     #Create for loop to train network
     for e in range(epochs):
@@ -124,7 +120,6 @@ def train_model(model, train_loader, valid_loader, criterion, optimizer, epochs,
 
                         p = torch.exp(output)
                         top_p, top_class = p.topk(1, dim=1)
-                        #equals = top_class == labels.view(*top_class.shape)
                         equality = (labels.data == p.max(dim=1)[1])
                         accuracy += equality.type(torch.FloatTensor).mean()               
 
@@ -216,7 +211,6 @@ def load_model(checkpoint_file):
         
     model.load_state_dict(checkpoint['state_dict'])
     model.class_to_index = checkpoint['class_to_idx']
-    #model.classifier.epochs = checkpoint['epochs']
     
     #Freeze to prevent backpropagation
     for param in model.parameters():
@@ -225,7 +219,7 @@ def load_model(checkpoint_file):
     print("Done loading the model")
     return model    
 
-def predict(categories, image_path, model, topk):
+def predict(categories, image_path, model, topk, gpu):
     '''
         Predict the class (or classes) of an image using a trained deep learning model.
         
@@ -238,21 +232,26 @@ def predict(categories, image_path, model, topk):
         top_p - The probabilities for the predictions
         labels - The class labels for the predictions
     '''
-    import helpers.ProcessImage
     
     #Load Image
     image = process_image(image_path)
-    
-    #Switch to evaluation mode
-    model.eval()
     
     #Use GPU if intended
     device = torch.device('cuda' if torch.cuda.is_available() and gpu else 'cpu')
     model.to(device)
     
-    image = torch.from_numpy(np.array([image])).float()
+    #Switch to evaluation mode
+    model.eval()
     
     with torch.no_grad():
+        # Implement the code to predict the class from an image file    
+        # Processs the image
+        image_tensor = helpers.ProcessImage.process_image(image_path)
+        
+        # We need a tensor for the model so change the image to a np.Array and then a tensor        
+        image = torch.from_numpy(np.array([image_tensor])).float()
+        image.to(device)
+        
         output = model.forward(image)
         probs, classes = torch.topk(output, topk)
         probs = probs.exp()
